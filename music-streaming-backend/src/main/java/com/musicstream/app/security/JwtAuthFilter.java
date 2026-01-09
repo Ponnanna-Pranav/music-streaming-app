@@ -29,16 +29,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // ✅ REQUIRED FOR CORS
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String path = request.getServletPath();
 
-        // ✅ ALLOW AUTH ENDPOINTS
-        if (path.startsWith("/users")) {
+        // 🔥 VERY IMPORTANT: allow auth + songs completely
+        if (
+            "OPTIONS".equalsIgnoreCase(request.getMethod()) ||
+            path.startsWith("/users") ||
+            path.startsWith("/songs")
+        ) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -68,3 +66,4 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+
