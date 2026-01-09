@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,11 +37,14 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
 
-                // ✅ VERY IMPORTANT (PRE-FLIGHT)
+                // ✅ PREFLIGHT
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // 🔓 AUTH
                 .requestMatchers("/users/login", "/users/register").permitAll()
+
+                // 🔐 USER INFO
+                .requestMatchers("/users/**").authenticated()
 
                 // 🔓 SONGS
                 .requestMatchers(HttpMethod.GET, "/songs/**").permitAll()
@@ -61,18 +64,28 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ GLOBAL CORS CONFIG (SECURITY LEVEL)
+    // ✅ SINGLE SOURCE OF TRUTH FOR CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-            "https://music-streaming-app-git-main-pranavs-projects-aeadd624.vercel.app",
-            "https://music-streaming-app-ashen.vercel.app"
+            "https://music-streaming-app-ashen.vercel.app",
+            "https://music-streaming-app-git-main-pranavs-projects-aeadd624.vercel.app"
         ));
 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
         config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of(
+            "Authorization",
+            "Content-Type"
+        ));
+
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
