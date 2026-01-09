@@ -64,25 +64,34 @@ public class SecurityConfig {
     // ✅ CORRECT CORS (FIXES ALL VERCEL PREVIEWS)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
+    
         CorsConfiguration config = new CorsConfiguration();
-
-        // ✅ ALLOW ALL VERCEL PREVIEWS
+    
+        // ✅ allow ALL vercel previews + prod
         config.setAllowedOriginPatterns(List.of(
-            "https://*.vercel.app"
+                "https://*.vercel.app"
         ));
-
+    
         config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
-
+    
         config.setAllowedHeaders(List.of("*"));
+    
+        // 🔥 THIS IS THE MOST IMPORTANT PART 🔥
+        config.setExposedHeaders(List.of(
+                "Content-Range",
+                "Accept-Ranges",
+                "Content-Length",
+                "Content-Type"
+        ));
+    
         config.setAllowCredentials(true);
-
+    
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", config);
+    
         return source;
     }
 }
