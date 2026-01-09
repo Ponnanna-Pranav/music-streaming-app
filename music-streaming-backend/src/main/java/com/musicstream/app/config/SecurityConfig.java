@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,14 +37,11 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
 
-                // ✅ PREFLIGHT
+                // ✅ MUST ALLOW PREFLIGHT
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // 🔓 AUTH
                 .requestMatchers("/users/login", "/users/register").permitAll()
-
-                // 🔐 USER INFO
-                .requestMatchers("/users/**").authenticated()
 
                 // 🔓 SONGS
                 .requestMatchers(HttpMethod.GET, "/songs/**").permitAll()
@@ -64,13 +61,14 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ SINGLE SOURCE OF TRUTH FOR CORS
+    // ✅ CORRECT CORS (FIXES ALL VERCEL PREVIEWS)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
+        // ✅ ALLOW ALL VERCEL PREVIEWS
+        config.setAllowedOriginPatterns(List.of(
             "https://*.vercel.app"
         ));
 
@@ -79,18 +77,12 @@ public class SecurityConfig {
         ));
 
         config.setAllowedHeaders(List.of("*"));
-
-        config.setExposedHeaders(List.of(
-            "Authorization",
-            "Content-Type"
-        ));
-
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
 
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
