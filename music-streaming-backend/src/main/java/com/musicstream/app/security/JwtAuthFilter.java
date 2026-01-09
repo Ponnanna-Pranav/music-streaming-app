@@ -29,14 +29,26 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String path = request.getServletPath();
+        String path = request.getRequestURI();
+        String method = request.getMethod();
 
-        // 🔥 DO NOT TOUCH AUTH ENDPOINTS
-        if (path.startsWith("/users")) {
+        // ✅ ALWAYS ALLOW PREFLIGHT
+        if ("OPTIONS".equalsIgnoreCase(method)) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // ✅ PUBLIC ENDPOINTS (NO JWT)
+        if (
+            path.startsWith("/users/login") ||
+            path.startsWith("/users/register") ||
+            (path.startsWith("/songs") && "GET".equalsIgnoreCase(method))
+        ) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 🔐 JWT REQUIRED FROM HERE
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
