@@ -20,7 +20,7 @@ export const PlayerProvider = ({ children }) => {
   const [volume, setVolume] = useState(1);
 
   /* =========================
-     AUDIO EVENTS (SAFE)
+     AUDIO EVENTS
   ========================== */
   useEffect(() => {
     const audio = audioRef.current;
@@ -56,8 +56,9 @@ export const PlayerProvider = ({ children }) => {
     const song = songs[index];
     const audio = audioRef.current;
 
+    // 🔥 CRITICAL FIX
     audio.pause();
-    audio.src = `http://localhost:8080/songs/${song.id}/stream`;
+    audio.src = `${import.meta.env.VITE_API_URL}/songs/${song.id}/stream`;
     audio.load();
 
     setQueue(songs);
@@ -67,7 +68,9 @@ export const PlayerProvider = ({ children }) => {
     audio
       .play()
       .then(() => setIsPlaying(true))
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Audio play failed:", err);
+      });
   };
 
   const togglePlay = () => {
@@ -102,7 +105,7 @@ export const PlayerProvider = ({ children }) => {
   };
 
   /* =========================
-     🔥 STOP PLAYER (LOGOUT FIX)
+     STOP PLAYER (LOGOUT)
   ========================== */
   const stopAndReset = () => {
     const audio = audioRef.current;
@@ -136,7 +139,7 @@ export const PlayerProvider = ({ children }) => {
         seek,
         setVolume,
 
-        stopAndReset, // ✅ IMPORTANT
+        stopAndReset,
       }}
     >
       {children}
