@@ -14,7 +14,6 @@ import java.util.List;
 @RequestMapping("/songs")
 @CrossOrigin(
         origins = {
-                "http://localhost:5173",
                 "https://music-streaming-hfifc5agb-pranavs-projects-aeadd624.vercel.app"
         }
 )
