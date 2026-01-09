@@ -27,31 +27,40 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
+            // ✅ CORS (VERY IMPORTANT — uses CorsConfigurationSource bean)
             .cors(Customizer.withDefaults())
+
+            // ❌ Disable CSRF for stateless JWT APIs
+            .csrf(csrf -> csrf.disable())
+
+            // ❌ No HTTP session (JWT only)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+
+            // 🔐 Authorization rules
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 AUTH
+                // 🔓 AUTH APIs
                 .requestMatchers("/users/login", "/users/register").permitAll()
 
-                // 🔓 SONGS + STREAMING
+                // 🔓 SONG READ + STREAM
                 .requestMatchers(HttpMethod.GET, "/songs/**").permitAll()
 
-                // 🔐 PLAYLISTS (ALL OPS)
+                // 🔐 PLAYLIST APIs
                 .requestMatchers("/playlists/**").authenticated()
 
                 // 🔐 EVERYTHING ELSE
                 .anyRequest().authenticated()
             )
+
+            // 🔑 JWT FILTER
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ REQUIRED FOR LOGIN / REGISTER
+    // 🔐 PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
