@@ -1,18 +1,3 @@
-package com.musicstream.app.security;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.Collections;
-
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -29,26 +14,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        // ✅ ALWAYS ALLOW PREFLIGHT
-        if ("OPTIONS".equalsIgnoreCase(method)) {
+        // ✅ ABSOLUTELY REQUIRED FOR CORS
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // ✅ PUBLIC ENDPOINTS (NO JWT)
-        if (
-            path.startsWith("/users/login") ||
-            path.startsWith("/users/register") ||
-            (path.startsWith("/songs") && "GET".equalsIgnoreCase(method))
-        ) {
+        String path = request.getServletPath();
+
+        // ✅ ALLOW AUTH ENDPOINTS
+        if (path.startsWith("/users")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 🔐 JWT REQUIRED FROM HERE
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -67,10 +46,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             null,
                             Collections.emptyList()
                     );
-
-            authToken.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request)
-            );
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
