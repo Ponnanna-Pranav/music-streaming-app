@@ -12,11 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/songs")
-@CrossOrigin(
-        origins = {
-                "https://music-streaming-hfifc5agb-pranavs-projects-aeadd624.vercel.app"
-        }
-)
 public class SongController {
 
     private final SongRepository songRepository;
@@ -54,18 +49,20 @@ public class SongController {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Song not found"));
 
-        // ✅ LOAD AUDIO FROM CLASSPATH (MANDATORY FOR CLOUD)
-        // DB must contain: audio/believer.mp3 etc.
+        // ✅ MUST be classpath-relative
+        // Example DB value: audio/believer.mp3
         Resource resource = new ClassPathResource(song.getFilePath());
 
         if (!resource.exists()) {
-            throw new RuntimeException("Audio file not found in classpath: " + song.getFilePath());
+            throw new RuntimeException(
+                "Audio file not found in classpath: " + song.getFilePath()
+            );
         }
 
         long fileSize = resource.contentLength();
 
         // =========================
-        // NO RANGE → FULL FILE
+        // FULL FILE
         // =========================
         if (headers.getRange().isEmpty()) {
             return ResponseEntity.ok()
@@ -76,12 +73,11 @@ public class SongController {
         }
 
         // =========================
-        // RANGE REQUEST (STREAMING)
+        // RANGE REQUEST (HEADER ONLY)
         // =========================
         HttpRange range = headers.getRange().get(0);
         long start = range.getRangeStart(fileSize);
         long end = range.getRangeEnd(fileSize);
-        long length = end - start + 1;
 
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
                 .contentType(MediaType.valueOf("audio/mpeg"))
@@ -90,7 +86,7 @@ public class SongController {
                         HttpHeaders.CONTENT_RANGE,
                         "bytes " + start + "-" + end + "/" + fileSize
                 )
-                .contentLength(length)
+                .contentLength(end - start + 1)
                 .body(resource);
     }
 }
