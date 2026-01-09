@@ -1,0 +1,123 @@
+/* =============================
+   SONGS PAGE CONTAINER
+============================= */
+.songs-container {
+  padding: 28px;
+  color: white;
+}
+
+.songs-container h1 {
+  font-size: 32px;
+  margin-bottom: 24px;
+}
+
+/* =============================
+   SONG CARD
+============================= */
+.song-card {
+  display: grid;
+  grid-template-columns: 1fr 60px 48px;
+  align-items: center;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  background: radial-gradient(circle at top, #1db95422, #000 60%);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.2s;
+}
+
+.song-card:hover {
+  background: #222;
+  transform: scale(1.01);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* =============================
+   ACTIVE / PLAYING STATE
+============================= */
+.song-card.active {
+  background: linear-gradient(
+    90deg,
+    rgba(29, 185, 84, 0.25),
+    rgba(24, 24, 24, 1)
+  );
+  border-left: 4px solid #1db954;
+}
+
+/* =============================
+   SONG INFO
+============================= */
+.song-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.song-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.song-artist {
+  font-size: 13px;
+  color: #b3b3b3;
+}
+
+/* =============================
+   PLAY ICON
+============================= */
+.song-play {
+  font-size: 22px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.song-card:hover .song-play,
+.song-card.active .song-play {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* =============================
+   ROUND PLAYLIST BUTTON
+============================= */
+.playlist-select {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #000;
+  color: #1db954;
+  border: 1px solid #333;
+  cursor: pointer;
+  font-size: 18px;
+  text-align: center;
+  transition: transform 0.2s, background 0.2s, border 0.2s;
+}
+
+.playlist-select:hover {
+  transform: scale(1.1);
+  background: #1db954;
+  color: black;
+  border-color: #1db954;
+}
+
+/* hide default arrow */
+.playlist-select option {
+  color: black;
+}
+
+/* =============================
+   RESPONSIVE
+============================= */
+@media (max-width: 768px) {
+  .song-card {
+    grid-template-columns: 1fr 40px 40px;
+    padding: 14px;
+  }
+
+  .song-title {
+    font-size: 15px;
+  }
+}

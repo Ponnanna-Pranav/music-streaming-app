@@ -1,0 +1,92 @@
+body {
+  background-color: #121212;
+  color: rgb(121, 11, 11);
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* SONG LIST */
+.song-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.song-item:hover {
+  background-color: #1db95433;
+}
+
+.song-active {
+  background-color: #1db95455;
+  font-weight: bold;
+}
+
+.song-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.song-left img {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* PLAYER BAR */
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #181818;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #333;
+}
+
+.player-song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 30%;
+}
+
+.player-song img {
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+}
+
+.player-controls {
+  width: 40%;
+  text-align: center;
+}
+
+.player-controls button {
+  background: none;
+  border: none;
+  color: rgb(124, 5, 5);
+  font-size: 18px;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+.player-controls button:hover {
+  color: #1db954;
+}
+
+.player-audio {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.player-extra {
+  width: 20%;
+  text-align: right;
+}

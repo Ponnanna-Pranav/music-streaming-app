@@ -1,0 +1,11 @@
+# Backend
+/target
+*.log
+
+# Frontend
+/node_modules
+/build
+
+# IDE
+/.idea
+/.vscode

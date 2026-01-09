@@ -1,0 +1,43 @@
+.playlist-details {
+  padding: 24px;
+  color: white;
+}
+
+.playlist-song {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  background: #181818;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.playlist-song:hover {
+  background: #1db95433;
+}
+
+.artist {
+  font-size: 13px;
+  color: #aaa;
+}
+.playlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.delete-btn {
+  background: #ff4d4d;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.delete-btn:hover {
+  background: #ff1a1a;
+}
