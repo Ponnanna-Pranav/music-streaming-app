@@ -2,11 +2,17 @@
 import axios from "axios";
 
 /* ============================
+   BASE URL (ENV-BASED)
+============================ */
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+/* ============================
    AXIOS INSTANCE
 ============================ */
 
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -57,7 +63,7 @@ export const getSongs = async () => {
 };
 
 export const streamSongUrl = (songId) =>
-  `http://localhost:8080/songs/${songId}/stream`;
+  `${BASE_URL}/songs/${songId}/stream`;
 
 /* ============================
    PLAYLIST APIs
