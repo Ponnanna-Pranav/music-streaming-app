@@ -2,20 +2,22 @@ package com.musicstream.app.controller;
 
 import com.musicstream.app.model.Song;
 import com.musicstream.app.repository.SongRepository;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
 @RequestMapping("/songs")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(
+        origins = {
+                "http://localhost:5173",
+                "https://music-streaming-hfifc5agb-pranavs-projects-aeadd624.vercel.app"
+        }
+)
 public class SongController {
 
     private final SongRepository songRepository;
@@ -24,26 +26,26 @@ public class SongController {
         this.songRepository = songRepository;
     }
 
-    // -------------------------
+    // =========================
     // GET /songs
-    // -------------------------
+    // =========================
     @GetMapping
     public List<Song> getAllSongs() {
         return songRepository.findAll();
     }
 
-    // -------------------------
+    // =========================
     // GET /songs/{id}
-    // -------------------------
+    // =========================
     @GetMapping("/{id}")
     public Song getSongById(@PathVariable Long id) {
         return songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Song not found"));
     }
 
-    // -------------------------
+    // =========================
     // GET /songs/{id}/stream
-    // -------------------------
+    // =========================
     @GetMapping(value = "/{id}/stream", produces = "audio/mpeg")
     public ResponseEntity<Resource> streamSong(
             @PathVariable Long id,
@@ -53,17 +55,19 @@ public class SongController {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Song not found"));
 
-        // ✅ Absolute file path (works 100% reliably)
-        Path path = Paths.get("src/main/resources/audio/" + song.getFilePath());
+        // ✅ LOAD AUDIO FROM CLASSPATH (MANDATORY FOR CLOUD)
+        // DB must contain: audio/believer.mp3 etc.
+        Resource resource = new ClassPathResource(song.getFilePath());
 
-        if (!Files.exists(path)) {
-            throw new RuntimeException("Audio file not found");
+        if (!resource.exists()) {
+            throw new RuntimeException("Audio file not found in classpath: " + song.getFilePath());
         }
 
-        long fileSize = Files.size(path);
-        Resource resource = new UrlResource(path.toUri());
+        long fileSize = resource.contentLength();
 
-        // ✅ No Range header → send full file
+        // =========================
+        // NO RANGE → FULL FILE
+        // =========================
         if (headers.getRange().isEmpty()) {
             return ResponseEntity.ok()
                     .contentType(MediaType.valueOf("audio/mpeg"))
@@ -72,26 +76,22 @@ public class SongController {
                     .body(resource);
         }
 
-        // ✅ Range request
+        // =========================
+        // RANGE REQUEST (STREAMING)
+        // =========================
         HttpRange range = headers.getRange().get(0);
         long start = range.getRangeStart(fileSize);
         long end = range.getRangeEnd(fileSize);
         long length = end - start + 1;
 
-        // 🔥 Create sliced resource
-        Resource slicedResource = new UrlResource(path.toUri()) {
-            @Override
-            public long contentLength() {
-                return length;
-            }
-        };
-
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
                 .contentType(MediaType.valueOf("audio/mpeg"))
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                .header(HttpHeaders.CONTENT_RANGE,
-                        "bytes " + start + "-" + end + "/" + fileSize)
+                .header(
+                        HttpHeaders.CONTENT_RANGE,
+                        "bytes " + start + "-" + end + "/" + fileSize
+                )
                 .contentLength(length)
-                .body(slicedResource);
+                .body(resource);
     }
 }
