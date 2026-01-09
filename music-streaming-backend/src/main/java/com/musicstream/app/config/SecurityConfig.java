@@ -71,8 +71,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-            "https://music-streaming-app-ashen.vercel.app",
-            "https://music-streaming-app-git-main-pranavs-projects-aeadd624.vercel.app"
+            "https://*.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
