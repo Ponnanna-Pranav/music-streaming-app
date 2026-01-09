@@ -12,6 +12,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.*;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,42 +30,55 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            // ✅ CORS (VERY IMPORTANT — uses CorsConfigurationSource bean)
-            .cors(Customizer.withDefaults())
-
-            // ❌ Disable CSRF for stateless JWT APIs
             .csrf(csrf -> csrf.disable())
-
-            // ❌ No HTTP session (JWT only)
+            .cors(Customizer.withDefaults())
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
-            // 🔐 Authorization rules
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 AUTH APIs
+                // ✅ VERY IMPORTANT (PRE-FLIGHT)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // 🔓 AUTH
                 .requestMatchers("/users/login", "/users/register").permitAll()
 
-                // 🔓 SONG READ + STREAM
+                // 🔓 SONGS
                 .requestMatchers(HttpMethod.GET, "/songs/**").permitAll()
 
-                // 🔐 PLAYLIST APIs
+                // 🔐 PLAYLISTS
                 .requestMatchers("/playlists/**").authenticated()
 
-                // 🔐 EVERYTHING ELSE
                 .anyRequest().authenticated()
             )
-
-            // 🔑 JWT FILTER
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // 🔐 PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    // ✅ GLOBAL CORS CONFIG (SECURITY LEVEL)
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+            "https://music-streaming-app-git-main-pranavs-projects-aeadd624.vercel.app",
+            "https://music-streaming-app-ashen.vercel.app"
+        ));
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 }
