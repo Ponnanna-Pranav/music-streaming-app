@@ -4,6 +4,7 @@ import com.musicstream.app.model.Song;
 import com.musicstream.app.repository.SongRepository;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceRegion;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,34 +15,28 @@ import java.util.List;
 @RequestMapping("/songs")
 public class SongController {
 
+    private static final long CHUNK_SIZE = 1024 * 1024; // 1MB
+
     private final SongRepository songRepository;
 
     public SongController(SongRepository songRepository) {
         this.songRepository = songRepository;
     }
 
-    // =========================
-    // GET /songs
-    // =========================
     @GetMapping
     public List<Song> getAllSongs() {
         return songRepository.findAll();
     }
 
-    // =========================
-    // GET /songs/{id}
-    // =========================
     @GetMapping("/{id}")
     public Song getSongById(@PathVariable Long id) {
         return songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Song not found"));
     }
 
-    // =========================
-    // GET /songs/{id}/stream
-    // =========================
+    // ✅ CORRECT STREAMING IMPLEMENTATION
     @GetMapping(value = "/{id}/stream", produces = "audio/mpeg")
-    public ResponseEntity<Resource> streamSong(
+    public ResponseEntity<ResourceRegion> streamSong(
             @PathVariable Long id,
             @RequestHeader HttpHeaders headers
     ) throws IOException {
@@ -49,44 +44,30 @@ public class SongController {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Song not found"));
 
-        // ✅ MUST be classpath-relative
-        // Example DB value: audio/believer.mp3
         Resource resource = new ClassPathResource(song.getFilePath());
 
         if (!resource.exists()) {
-            throw new RuntimeException(
-                "Audio file not found in classpath: " + song.getFilePath()
-            );
+            throw new RuntimeException("Audio file not found: " + song.getFilePath());
         }
 
-        long fileSize = resource.contentLength();
+        long contentLength = resource.contentLength();
 
-        // =========================
-        // FULL FILE
-        // =========================
+        ResourceRegion region;
+
         if (headers.getRange().isEmpty()) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.valueOf("audio/mpeg"))
-                    .contentLength(fileSize)
-                    .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                    .body(resource);
+            region = new ResourceRegion(resource, 0, Math.min(CHUNK_SIZE, contentLength));
+        } else {
+            HttpRange range = headers.getRange().get(0);
+            long start = range.getRangeStart(contentLength);
+            long end = range.getRangeEnd(contentLength);
+            long rangeLength = Math.min(CHUNK_SIZE, end - start + 1);
+            region = new ResourceRegion(resource, start, rangeLength);
         }
 
-        // =========================
-        // RANGE REQUEST (HEADER ONLY)
-        // =========================
-        HttpRange range = headers.getRange().get(0);
-        long start = range.getRangeStart(fileSize);
-        long end = range.getRangeEnd(fileSize);
-
-        return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
+        return ResponseEntity
+                .status(HttpStatus.PARTIAL_CONTENT)
                 .contentType(MediaType.valueOf("audio/mpeg"))
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
-                .header(
-                        HttpHeaders.CONTENT_RANGE,
-                        "bytes " + start + "-" + end + "/" + fileSize
-                )
-                .contentLength(end - start + 1)
-                .body(resource);
+                .body(region);
     }
 }
